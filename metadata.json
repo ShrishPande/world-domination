@@ -1,0 +1,5 @@
+{
+  "name": "World Domination: Gemini's Gambit",
+  "description": "A timed, AI-powered grand strategy game where you choose a starting nation and year, then make strategic decisions to conquer the world. Your score is based on territory, population, resources, and well-being, all within a 15-minute timeframe.",
+  "requestFramePermissions": []
+}
