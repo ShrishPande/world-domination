@@ -103,7 +103,11 @@ router.post('/scores', async (req, res) => {
 
 router.get('/scores/user/:userId', async (req, res) => {
   try {
-    const scores = await Score.find({ userId: req.params.userId }).sort({ date: -1 });
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID format.' });
+    }
+    const scores = await Score.find({ userId: userId }).sort({ date: -1 });
     res.json(scores);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching user scores.', error });

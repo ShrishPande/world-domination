@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
@@ -16,12 +15,14 @@ const Login: React.FC = () => {
         return;
     }
     try {
-      const user = await login(username);
-      if (!user) {
-        setError('No ruler with that name found in the archives.');
-      }
+      await login(username);
+      // On success, the AuthProvider will update the state and the App component will navigate away.
     } catch (err) {
-      setError('An unknown cataclysm occurred. Please try again.');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown cataclysm occurred. Please try again.');
+      }
     }
   };
 

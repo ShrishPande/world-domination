@@ -1,8 +1,8 @@
 import { Score, LeaderboardEntry, User } from '../types';
 
 // In a real deployed app, you might use an environment variable for the API base URL.
-// For this setup, a relative path assumes the API is served from the same origin.
-const API_BASE_URL = '/api';
+// For this setup, we use an absolute URL to ensure the frontend dev server can reach the backend.
+const API_BASE_URL = 'http://localhost:3001/api';
 
 // A helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -82,7 +82,7 @@ export const findUserByUsername = async (username: string): Promise<User | null>
     throw new Error("findUserByUsername is deprecated. Use loginUser.");
 };
 
-export const createUser = async (username: string): Promise<User> => {
+export const createUser = async (username:string): Promise<User> => {
     // This is now handled by POST /api/auth/signup
     throw new Error("createUser is deprecated. Use signupUser.");
 };
