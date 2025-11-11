@@ -1,14 +1,20 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameScreen as GameScreenEnum, GameState, Choice, ScoreDetails, Difficulty } from './types';
+import { GameScreen as GameScreenEnum, GameState, Choice, ScoreDetails, Difficulty, Score } from './types';
 import { initializeGame, processTurn, calculateScore } from './services/geminiService';
+import { saveScore } from './services/dbService';
+import { useAuth } from './contexts/AuthContext';
 import SetupScreen from './components/SetupScreen';
 import GameScreen from './components/GameScreen';
 import GameOverScreen from './components/GameOverScreen';
-import { GAME_DURATION } from './constants';
+import AuthScreen from './components/auth/AuthScreen';
+import DashboardScreen from './components/DashboardScreen';
+import LeaderboardScreen from './components/LeaderboardScreen';
+import Header from './components/Header';
 
 const App: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<GameScreenEnum>(GameScreenEnum.Setup);
+  const { currentUser } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState<GameScreenEnum>(GameScreenEnum.Dashboard);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [choices, setChoices] = useState<Choice[]>([]);
@@ -16,6 +22,18 @@ const App: React.FC = () => {
   const [scoreDetails, setScoreDetails] = useState<ScoreDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setCurrentScreen(GameScreenEnum.Auth);
+    } else {
+      setCurrentScreen(GameScreenEnum.Dashboard);
+    }
+  }, [currentUser]);
+  
+  const navigateTo = (screen: GameScreenEnum) => {
+    setCurrentScreen(screen);
+  }
 
   const handleStartGame = useCallback(async (country: string, year: number, difficulty: Difficulty) => {
     setIsLoading(true);
@@ -30,6 +48,7 @@ const App: React.FC = () => {
     } catch (e) {
       setError('Failed to start the game. The AI strategist might be on a coffee break. Please try again.');
       console.error(e);
+      setCurrentScreen(GameScreenEnum.Setup); // Go back to setup on failure
     } finally {
       setIsLoading(false);
     }
@@ -53,23 +72,32 @@ const App: React.FC = () => {
   }, [gameState, difficulty]);
   
   const handleTimeUp = useCallback(async () => {
-    if (!gameState) return;
+    if (!gameState || !currentUser) return;
     setIsLoading(true);
     setError(null);
     try {
       const finalScore = await calculateScore(gameState);
+      const newScore: Score = {
+        id: Date.now().toString(),
+        userId: currentUser.id,
+        score: finalScore.score,
+        title: finalScore.title,
+        analysis: finalScore.analysis,
+        finalState: gameState,
+        date: new Date().toISOString(),
+      }
+      await saveScore(newScore);
       setScoreDetails(finalScore);
       setCurrentScreen(GameScreenEnum.GameOver);
     } catch (e) {
       setError('Failed to calculate final score. Your legacy is too vast to measure! Please try playing again.');
       console.error(e);
-      // Fallback score
       setScoreDetails({ score: 0, title: "An Enigma", analysis: "The historians couldn't calculate your score due to a cosmic anomaly. Your reign remains a mystery." });
       setCurrentScreen(GameScreenEnum.GameOver);
     } finally {
       setIsLoading(false);
     }
-  }, [gameState]);
+  }, [gameState, currentUser]);
 
   const handlePlayAgain = () => {
     setGameState(null);
@@ -82,7 +110,14 @@ const App: React.FC = () => {
   };
 
   const renderScreen = () => {
+    if (!currentUser) {
+      return <AuthScreen />;
+    }
     switch (currentScreen) {
+      case GameScreenEnum.Dashboard:
+        return <DashboardScreen onNavigate={navigateTo} />;
+      case GameScreenEnum.Leaderboard:
+        return <LeaderboardScreen />;
       case GameScreenEnum.Setup:
         return <SetupScreen onStart={handleStartGame} isLoading={isLoading} error={error} />;
       case GameScreenEnum.Playing:
@@ -103,16 +138,18 @@ const App: React.FC = () => {
             scoreDetails={scoreDetails}
             finalState={gameState}
             onPlayAgain={handlePlayAgain}
+            onNavigateToDashboard={() => setCurrentScreen(GameScreenEnum.Dashboard)}
           />
         );
       default:
-        return <SetupScreen onStart={handleStartGame} isLoading={isLoading} error={error} />;
+        return <DashboardScreen onNavigate={navigateTo} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-4">
+      {currentUser && currentScreen !== GameScreenEnum.Playing && <Header onNavigate={navigateTo} />}
+      <div className="w-full max-w-7xl mx-auto flex-grow">
         {renderScreen()}
       </div>
     </div>

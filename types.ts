@@ -1,5 +1,8 @@
 
 export enum GameScreen {
+  Auth = 'auth',
+  Dashboard = 'dashboard',
+  Leaderboard = 'leaderboard',
   Setup = 'setup',
   Playing = 'playing',
   GameOver = 'gameOver',
@@ -42,4 +45,27 @@ export interface TurnResponse extends InitialGameResponse {}
 
 export interface StartingCivilizationsResponse {
   civilizations: string[];
+}
+
+// Auth and Data Types
+export interface User {
+  id: string;
+  username: string;
+}
+
+export interface Score {
+  id: string;
+  userId: string;
+  score: number;
+  title: string;
+  analysis: string;
+  finalState: GameState;
+  date: string;
+}
+
+export interface LeaderboardEntry {
+  username: string;
+  highScore: number;
+  title: string;
+  date: string;
 }

@@ -9,6 +9,7 @@ import MilitaryIcon from './icons/MilitaryIcon';
 import EconomyIcon from './icons/EconomyIcon';
 import TechIcon from './icons/TechIcon';
 import GlobeIcon from './icons/GlobeIcon';
+import WorldMap from './WorldMap';
 
 interface GameScreenProps {
   gameState: GameState;
@@ -68,18 +69,17 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
         <Card>
             <div className="flex items-center gap-3 mb-4">
               <GlobeIcon className="w-6 h-6"/>
-              <h3 className="text-xl font-orbitron text-white">Conquered Territories</h3>
+              <h3 className="text-xl font-orbitron text-white">World Map</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
                 <div className="w-full bg-gray-700 rounded-full h-4">
-                    <div className="bg-cyan-500 h-4 rounded-full" style={{ width: `${worldPercentage}%` }}></div>
+                    <div className="bg-cyan-500 h-4 rounded-full transition-all duration-500" style={{ width: `${worldPercentage}%` }}></div>
                 </div>
-                <p className="text-center text-gray-300">{worldPercentage}% of the world</p>
+                <p className="text-center text-gray-300">{territoriesConquered} of {WORLD_REGIONS.length} Regions ({worldPercentage}%)</p>
             </div>
-            <div className="mt-4 max-h-40 overflow-y-auto p-2 bg-gray-900/50 rounded-md">
-                <ul className="list-disc list-inside text-gray-300">
-                    {gameState.territories.map(t => <li key={t}>{t}</li>)}
-                </ul>
+             <div className="relative p-2 bg-gray-900/50 rounded-md overflow-hidden border border-gray-700">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/20 via-transparent to-cyan-900/20 animate-subtle-pan"></div>
+              <WorldMap controlledTerritories={gameState.territories} />
             </div>
         </Card>
       </div>

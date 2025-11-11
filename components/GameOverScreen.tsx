@@ -9,9 +9,10 @@ interface GameOverScreenProps {
   scoreDetails: ScoreDetails;
   finalState: GameState;
   onPlayAgain: () => void;
+  onNavigateToDashboard: () => void;
 }
 
-const GameOverScreen: React.FC<GameOverScreenProps> = ({ scoreDetails, finalState, onPlayAgain }) => {
+const GameOverScreen: React.FC<GameOverScreenProps> = ({ scoreDetails, finalState, onPlayAgain, onNavigateToDashboard }) => {
   const territoriesConquered = finalState.territories.length;
   const worldPercentage = ((territoriesConquered / WORLD_REGIONS.length) * 100).toFixed(1);
 
@@ -20,6 +21,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ scoreDetails, finalStat
       <Card className="w-full max-w-3xl text-center">
         <h1 className="text-5xl font-bold font-orbitron text-cyan-400 mb-2">The End of an Era</h1>
         <p className="text-2xl font-semibold text-white mb-4">Your legacy as "{scoreDetails.title}" is written.</p>
+        <p className="text-green-400">Your final score has been recorded in the annals of history.</p>
         
         <div className="my-8">
             <p className="text-lg text-gray-400">Final Score</p>
@@ -54,9 +56,14 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ scoreDetails, finalStat
             </div>
         </div>
         
-        <Button onClick={onPlayAgain} className="mt-10 w-full max-w-sm mx-auto">
-          Forge a New Destiny
-        </Button>
+        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <Button onClick={onNavigateToDashboard} className="w-full sm:w-auto">
+            Return to Dashboard
+          </Button>
+          <Button onClick={onPlayAgain} className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700">
+            Forge a New Destiny
+          </Button>
+        </div>
       </Card>
     </div>
   );

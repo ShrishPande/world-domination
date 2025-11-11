@@ -17,6 +17,35 @@
       h1, h2, h3, h4, h5, h6, .font-orbitron {
         font-family: 'Orbitron', sans-serif;
       }
+      
+      @keyframes subtle-pan {
+        0%, 100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      .animate-subtle-pan {
+        background-size: 200% 200%;
+        animation: subtle-pan 20s infinite ease-in-out;
+      }
+      
+      @keyframes pulse-glow {
+        0%, 100% {
+          filter: drop-shadow(0 0 2px rgba(56, 189, 248, 0.5));
+          transform: scale(1);
+        }
+        50% {
+          filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9));
+          transform: scale(1.005);
+        }
+      }
+
+      .animate-pulse-glow {
+        animation: pulse-glow 4s infinite ease-in-out;
+      }
     </style>
   <script type="importmap">
 {
@@ -24,7 +53,10 @@
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "cors": "https://aistudiocdn.com/cors@^2.8.5",
+    "mongoose": "https://aistudiocdn.com/mongoose@^8.19.3",
+    "express": "https://aistudiocdn.com/express@^5.1.0"
   }
 }
 </script>
