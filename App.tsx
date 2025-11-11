@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GameScreen as GameScreenEnum, GameState, Choice, ScoreDetails } from './types';
+import { GameScreen as GameScreenEnum, GameState, Choice, ScoreDetails, Difficulty } from './types';
 import { initializeGame, processTurn, calculateScore } from './services/geminiService';
 import SetupScreen from './components/SetupScreen';
 import GameScreen from './components/GameScreen';
@@ -10,17 +10,19 @@ import { GAME_DURATION } from './constants';
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<GameScreenEnum>(GameScreenEnum.Setup);
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [choices, setChoices] = useState<Choice[]>([]);
   const [eventDescription, setEventDescription] = useState<string>('');
   const [scoreDetails, setScoreDetails] = useState<ScoreDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleStartGame = useCallback(async (country: string, year: number) => {
+  const handleStartGame = useCallback(async (country: string, year: number, difficulty: Difficulty) => {
     setIsLoading(true);
     setError(null);
     try {
-      const initialState = await initializeGame(country, year);
+      setDifficulty(difficulty);
+      const initialState = await initializeGame(country, year, difficulty);
       setGameState(initialState.gameState);
       setChoices(initialState.choices);
       setEventDescription(initialState.description);
@@ -34,11 +36,11 @@ const App: React.FC = () => {
   }, []);
 
   const handleSelectChoice = useCallback(async (choice: Choice) => {
-    if (!gameState) return;
+    if (!gameState || !difficulty) return;
     setIsLoading(true);
     setError(null);
     try {
-      const nextState = await processTurn(gameState, choice);
+      const nextState = await processTurn(gameState, choice, difficulty);
       setGameState(nextState.gameState);
       setChoices(nextState.choices);
       setEventDescription(nextState.description);
@@ -48,7 +50,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [gameState]);
+  }, [gameState, difficulty]);
   
   const handleTimeUp = useCallback(async () => {
     if (!gameState) return;
@@ -71,6 +73,7 @@ const App: React.FC = () => {
 
   const handlePlayAgain = () => {
     setGameState(null);
+    setDifficulty(null);
     setChoices([]);
     setEventDescription('');
     setScoreDetails(null);

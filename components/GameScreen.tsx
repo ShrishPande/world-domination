@@ -32,13 +32,7 @@ const StatDisplay: React.FC<{ icon: React.ReactNode; label: string; value: strin
 );
 
 const getChoiceColor = (type: ChoiceType): string => {
-    switch(type) {
-        case 'military': return 'bg-red-500/80 hover:bg-red-600/80 border-red-400';
-        case 'economy': return 'bg-green-500/80 hover:bg-green-600/80 border-green-400';
-        case 'diplomacy': return 'bg-blue-500/80 hover:bg-blue-600/80 border-blue-400';
-        case 'technology': return 'bg-purple-500/80 hover:bg-purple-600/80 border-purple-400';
-        default: return 'bg-gray-500/80 hover:bg-gray-600/80 border-gray-400';
-    }
+    return 'bg-gray-500/80 hover:bg-gray-600/80 border-gray-400';
 }
 
 const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description, onSelectChoice, onTimeUp, isLoading, error }) => {

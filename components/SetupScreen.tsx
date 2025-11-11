@@ -1,21 +1,29 @@
+
 import React, { useState } from 'react';
 import { getStartingCivilizations } from '../services/geminiService';
 import Button from './ui/Button';
 import Card from './ui/Card';
 import GlobeIcon from './icons/GlobeIcon';
+import { Difficulty } from '../types';
 
 interface SetupScreenProps {
-  onStart: (country: string, year: number) => void;
+  onStart: (country: string, year: number, difficulty: Difficulty) => void;
   isLoading: boolean;
   error: string | null;
 }
 
 const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) => {
-  const [step, setStep] = useState<'year' | 'civilization'>('year');
+  const [step, setStep] = useState<'difficulty' | 'year' | 'civilization'>('difficulty');
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [year, setYear] = useState<string>('');
   const [civilizations, setCivilizations] = useState<string[]>([]);
   const [isFetchingCivs, setIsFetchingCivs] = useState<boolean>(false);
   const [internalError, setInternalError] = useState<string | null>(null);
+
+  const handleDifficultySelect = (selectedDifficulty: Difficulty) => {
+    setDifficulty(selectedDifficulty);
+    setStep('year');
+  };
 
   const handleYearSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,23 +52,56 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
   };
 
   const handleCivSelection = (civ: string) => {
-    onStart(civ, parseInt(year));
+    if (!difficulty) return;
+    onStart(civ, parseInt(year), difficulty);
   };
 
-  const reset = () => {
-    setStep('year');
+  const resetToDifficulty = () => {
+    setStep('difficulty');
+    setDifficulty(null);
+    setYear('');
     setCivilizations([]);
     setInternalError(null);
   };
+  
+  const resetToYear = () => {
+    setStep('year');
+    setCivilizations([]);
+    setInternalError(null);
+  }
 
-  const renderYearStep = () => (
+  const renderDifficultyStep = () => (
     <Card className="w-full max-w-2xl">
       <div className="text-center">
         <div className="flex justify-center items-center gap-4 mb-4">
            <GlobeIcon className="w-12 h-12 text-cyan-400"/>
            <h1 className="text-4xl font-bold font-orbitron text-white">World Domination</h1>
         </div>
-        <p className="text-gray-400 mb-8">Choose a year and forge your empire.</p>
+        <p className="text-gray-400 mb-8">Choose your challenge level to begin.</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button onClick={() => handleDifficultySelect('easy')} className="bg-green-600 hover:bg-green-700">Easy</Button>
+          <Button onClick={() => handleDifficultySelect('medium')} className="bg-yellow-600 hover:bg-yellow-700">Medium</Button>
+          <Button onClick={() => handleDifficultySelect('hard')} className="bg-red-600 hover:bg-red-700">Hard</Button>
+          <Button onClick={() => handleDifficultySelect('realistic')} className="bg-purple-600 hover:bg-purple-700">Realistic</Button>
+      </div>
+       <div className="mt-4 text-center text-sm text-gray-500 space-y-1">
+            <p><span className="font-bold text-gray-400">Easy:</span> A forgiving world for aspiring rulers.</p>
+            <p><span className="font-bold text-gray-400">Medium:</span> A balanced challenge of risk and reward.</p>
+            <p><span className="font-bold text-gray-400">Hard:</span> The world is cruel and unforgiving.</p>
+            <p><span className="font-bold text-gray-400">Realistic:</span> Complex, unpredictable, and historically plausible.</p>
+        </div>
+    </Card>
+  );
+
+  const renderYearStep = () => (
+    <Card className="w-full max-w-2xl">
+      <div className="text-center">
+        <div className="flex justify-center items-center gap-4 mb-4">
+           <GlobeIcon className="w-12 h-12 text-cyan-400"/>
+           <h1 className="text-4xl font-bold font-orbitron text-white">Choose Your Era</h1>
+        </div>
+        <p className="text-gray-400 mb-8">You have chosen <span className="font-bold capitalize text-cyan-400">{difficulty}</span> difficulty. Now, select a year.</p>
       </div>
       
       {internalError && (
@@ -94,6 +135,9 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
           {isFetchingCivs ? 'Consulting Oracles...' : 'Find Civilizations'}
         </Button>
       </form>
+       <button onClick={resetToDifficulty} disabled={isFetchingCivs} className="text-cyan-400 hover:text-cyan-300 w-full text-center mt-4 disabled:opacity-50">
+          &larr; Choose a different difficulty
+      </button>
     </Card>
   );
 
@@ -105,7 +149,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
            <h1 className="text-4xl font-bold font-orbitron text-white">Select Your Origin</h1>
         </div>
         <p className="text-gray-400 mb-8">
-            The year is <span className="font-bold text-cyan-400">{parseInt(year) > 0 ? year : `${-parseInt(year)} BC`}</span>. These powers shape the world. Which will you lead?
+            The year is <span className="font-bold text-cyan-400">{parseInt(year) > 0 ? year : `${-parseInt(year)} BC`}</span> on <span className="font-bold capitalize text-cyan-400">{difficulty}</span> difficulty. These powers shape the world. Which will you lead?
         </p>
       </div>
       
@@ -123,15 +167,28 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
         ))}
       </div>
       
-      <button onClick={reset} disabled={isLoading} className="text-cyan-400 hover:text-cyan-300 w-full text-center mt-4 disabled:opacity-50">
+      <button onClick={resetToYear} disabled={isLoading} className="text-cyan-400 hover:text-cyan-300 w-full text-center mt-4 disabled:opacity-50">
           &larr; Choose a different year
       </button>
     </Card>
   );
+  
+  const renderStep = () => {
+      switch(step) {
+          case 'difficulty':
+              return renderDifficultyStep();
+          case 'year':
+              return renderYearStep();
+          case 'civilization':
+              return renderCivilizationStep();
+          default:
+              return renderDifficultyStep();
+      }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen animate-fadeIn">
-      {step === 'year' ? renderYearStep() : renderCivilizationStep()}
+      {renderStep()}
     </div>
   );
 };

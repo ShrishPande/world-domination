@@ -1,8 +1,11 @@
+
 export enum GameScreen {
   Setup = 'setup',
   Playing = 'playing',
   GameOver = 'gameOver',
 }
+
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'realistic';
 
 export interface GameState {
   year: number;

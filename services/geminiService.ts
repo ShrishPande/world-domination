@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { GameState, Choice, InitialGameResponse, TurnResponse, ScoreDetails, StartingCivilizationsResponse } from '../types';
+import { GameState, Choice, InitialGameResponse, TurnResponse, ScoreDetails, StartingCivilizationsResponse, Difficulty } from '../types';
 import { WORLD_REGIONS } from '../constants';
 
 if (!process.env.API_KEY) {
@@ -75,8 +76,14 @@ export const getStartingCivilizations = async (year: number): Promise<string[]> 
     return parsed.civilizations;
 };
 
-export const initializeGame = async (country: string, year: number): Promise<InitialGameResponse> => {
-    const prompt = `You are a world domination simulation AI. The user has chosen to start as the leader of the ${country} in the year ${year}. Generate an initial game state reflecting this choice. Provide a brief, engaging description of their starting situation. Offer 3-4 distinct strategic choices for their first move. The world is composed of these regions: ${WORLD_REGIONS.join(', ')}. Return the response as a JSON object.`;
+export const initializeGame = async (country: string, year: number, difficulty: Difficulty): Promise<InitialGameResponse> => {
+    const prompt = `You are a world domination simulation AI. The user has chosen to start as the leader of the ${country} in the year ${year} on '${difficulty}' difficulty.
+- For 'easy', provide a strong starting position with some advantages.
+- For 'medium', provide a balanced start.
+- For 'hard', provide a challenging start with clear disadvantages.
+- For 'realistic', provide a historically plausible, complex start that may be difficult.
+
+Generate an initial game state reflecting this choice. Provide a brief, engaging description of their starting situation. Offer 3-4 distinct strategic choices for their first move. The world is composed of these regions: ${WORLD_REGIONS.join(', ')}. Return the response as a JSON object.`;
     
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -99,13 +106,20 @@ export const initializeGame = async (country: string, year: number): Promise<Ini
 };
 
 
-export const processTurn = async (currentState: GameState, choice: Choice): Promise<TurnResponse> => {
-    const prompt = `You are a world domination simulation AI. The current game state is ${JSON.stringify(currentState)}. The player, the ${currentState.rulerTitle} of ${currentState.countryName}, has chosen to: "${choice.text}". 
+export const processTurn = async (currentState: GameState, choice: Choice, difficulty: Difficulty): Promise<TurnResponse> => {
+    const prompt = `You are a world domination simulation AI. The current game state is ${JSON.stringify(currentState)}. The player, the ${currentState.rulerTitle} of ${currentState.countryName}, has chosen to: "${choice.text}". The game difficulty is '${difficulty}'. 
     
-    Based on this choice and the historical context of the year ${currentState.year}, generate the outcome. 
-    1. Write a compelling description of what happened as a result of their choice.
-    2. Update the game state. The year should advance by a plausible amount (e.g., 1-5 years). Population, military, economy, and technology should change based on the outcome. If a new territory is conquered, add it to the territories list. New territories must be plausible neighbors to existing ones. The world is composed of these regions: ${WORLD_REGIONS.join(', ')}.
-    3. Provide 3-4 new, distinct strategic choices for the player's next turn.
+    Based on this choice, the historical context, and the difficulty, generate a surprising and unpredictable outcome. Avoid straightforward success or failure. Every choice should have trade-offs, unintended consequences, or unexpected twists.
+    
+    - On 'easy' difficulty, lean towards more favorable outcomes but still include a minor complication or twist.
+    - On 'medium' difficulty, outcomes should be a balanced mix of positive and negative effects.
+    - On 'hard' difficulty, choices often lead to difficult new problems, and positive results should be hard-won and limited. Major negative events can occur randomly.
+    - On 'realistic' difficulty, outcomes should be complex, multi-faceted, and grounded in historical possibility. Unforeseen global events should be factored in.
+
+    Follow these steps:
+    1. Write a compelling description of the nuanced outcome. It should not be a simple "success!" or "failure!". Introduce a twist. For example, a military victory could lead to a plague in the army, a rebellion in the newly conquered territory, or a new powerful enemy coalition forming. A trade deal could empower a future rival or cause social unrest at home.
+    2. Update the game state. The year should advance by a plausible amount (e.g., 1-10 years). All stats (population, military, economy, technology) must change based on the complex outcome. If a new territory is conquered, add it to the territories list. New territories must be plausible neighbors to existing ones. The world is composed of these regions: ${WORLD_REGIONS.join(', ')}.
+    3. Provide 3-4 new, distinct strategic choices for the player's next turn, reflecting the new, complex situation.
     
     Return the entire response as a single JSON object.`;
 
