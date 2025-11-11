@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { GameState, Choice, ChoiceType } from '../types';
 import { WORLD_REGIONS } from '../constants';
@@ -88,7 +87,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
       {/* Right Panel: Event and Choices */}
       <div className="lg:col-span-2 space-y-6">
         <Card>
-            <Timer onTimeUp={onTimeUp} />
+            <Timer onTimeUp={onTimeUp} isPaused={isLoading} />
         </Card>
         <Card>
             <h2 className="text-2xl font-orbitron text-white mb-4">Strategic Update</h2>

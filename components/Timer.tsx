@@ -1,16 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { GAME_DURATION } from '../constants';
 import HourglassIcon from './icons/HourglassIcon';
 
 interface TimerProps {
   onTimeUp: () => void;
+  isPaused: boolean;
 }
 
-const Timer: React.FC<TimerProps> = ({ onTimeUp }) => {
+const Timer: React.FC<TimerProps> = ({ onTimeUp, isPaused }) => {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
 
   useEffect(() => {
+    if (isPaused) {
+      return;
+    }
+
     if (timeLeft <= 0) {
       onTimeUp();
       return;
@@ -21,7 +25,7 @@ const Timer: React.FC<TimerProps> = ({ onTimeUp }) => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timeLeft, onTimeUp]);
+  }, [timeLeft, onTimeUp, isPaused]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
