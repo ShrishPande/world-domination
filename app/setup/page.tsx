@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Difficulty } from '@/types';
+import { Difficulty, GameMode } from '@/types';
 import { initializeGame } from '@/services/geminiService';
 import SetupScreen from '@/components/SetupScreen';
 import { useGame } from '@/contexts/GameContext';
@@ -11,14 +11,15 @@ export default function SetupPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { setGameState, setChoices, setEventDescription, setEventSummary, setRivalCivilizations, setIntelligenceReports, setActiveMissions, setWorldTerritories, setDifficulty } = useGame();
+  const { setGameState, setChoices, setEventDescription, setEventSummary, setRivalCivilizations, setIntelligenceReports, setActiveMissions, setWorldTerritories, setResources, setTradeRoutes, setActivePolicies, setAvailablePolicies, setMitigationTools, setDifficulty, setGameMode } = useGame();
 
-  const handleStartGame = useCallback(async (country: string, year: number, difficulty: Difficulty) => {
+  const handleStartGame = useCallback(async (country: string, year: number, difficulty: Difficulty, gameMode: GameMode) => {
     setIsLoading(true);
     setError(null);
     try {
       setDifficulty(difficulty);
-      const initialState = await initializeGame(country, year, difficulty);
+      setGameMode(gameMode);
+      const initialState = await initializeGame(country, year, difficulty, gameMode);
       setGameState(initialState.gameState);
       setChoices(initialState.choices);
       setEventDescription(initialState.description);
@@ -27,6 +28,11 @@ export default function SetupPage() {
       setIntelligenceReports(initialState.gameState.intelligenceReports);
       setActiveMissions(initialState.gameState.activeMissions);
       setWorldTerritories(initialState.gameState.worldTerritories);
+      setResources(initialState.gameState.resources);
+      setTradeRoutes(initialState.gameState.tradeRoutes);
+      setActivePolicies(initialState.gameState.activePolicies);
+      setAvailablePolicies(initialState.gameState.availablePolicies);
+      setMitigationTools(initialState.gameState.mitigationTools);
       router.push('/game');
     } catch (e) {
       setError('Failed to start the game. The AI strategist might be on a coffee break. Please try again.');

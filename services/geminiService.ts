@@ -1,4 +1,4 @@
-import { GameState, Choice, InitialGameResponse, TurnResponse, ScoreDetails, Difficulty } from '../types';
+import { GameState, Choice, InitialGameResponse, TurnResponse, ScoreDetails, Difficulty, GameMode } from '../types';
 
 const API_BASE_URL = '/api/gemini';
 
@@ -41,11 +41,11 @@ export const getStartingCivilizations = async (year: number): Promise<string[]> 
     })).then(data => data.civilizations);
 };
 
-export const initializeGame = async (country: string, year: number, difficulty: Difficulty): Promise<InitialGameResponse> => {
+export const initializeGame = async (country: string, year: number, difficulty: Difficulty, gameMode?: GameMode): Promise<InitialGameResponse> => {
     return retryApiCall(() => fetchWithErrorCheck(`${API_BASE_URL}/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country, year, difficulty }),
+        body: JSON.stringify({ country, year, difficulty, gameMode }),
     }));
 };
 

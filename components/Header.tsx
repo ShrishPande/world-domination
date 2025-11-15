@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { GameScreen } from '../types';
+import LogoutIcon from './icons/LogoutIcon';
 
 interface HeaderProps {
     onNavigate: (screen: GameScreen) => void;
@@ -19,10 +20,12 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
       <nav className="flex items-center gap-4">
         <button onClick={() => onNavigate(GameScreen.Dashboard)} className="text-gray-300 hover:text-white transition-colors">Dashboard</button>
         <button onClick={() => onNavigate(GameScreen.Leaderboard)} className="text-gray-300 hover:text-white transition-colors">Leaderboard</button>
-        <button 
-            onClick={logout} 
-            className="bg-red-600/80 hover:bg-red-700/80 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+        <button onClick={() => onNavigate(GameScreen.Profile)} className="text-gray-300 hover:text-white transition-colors">Profile</button>
+        <button
+            onClick={logout}
+            className="bg-red-600/80 hover:bg-red-700/80 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2"
         >
+            <LogoutIcon className="w-4 h-4" />
             Abdicate
         </button>
       </nav>

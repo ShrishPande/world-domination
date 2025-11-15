@@ -22,6 +22,11 @@ export default function GamePage() {
     intelligenceReports, setIntelligenceReports,
     activeMissions, setActiveMissions,
     worldTerritories, setWorldTerritories,
+    resources, setResources,
+    tradeRoutes, setTradeRoutes,
+    activePolicies, setActivePolicies,
+    availablePolicies, setAvailablePolicies,
+    mitigationTools, setMitigationTools,
     difficulty,
     setScoreDetails
   } = useGame();
@@ -41,6 +46,11 @@ export default function GamePage() {
       setIntelligenceReports(nextState.gameState.intelligenceReports);
       setActiveMissions(nextState.gameState.activeMissions);
       setWorldTerritories(nextState.gameState.worldTerritories);
+      setResources(nextState.gameState.resources);
+      setTradeRoutes(nextState.gameState.tradeRoutes);
+      setActivePolicies(nextState.gameState.activePolicies);
+      setAvailablePolicies(nextState.gameState.availablePolicies);
+      setMitigationTools(nextState.gameState.mitigationTools);
     } catch (e) {
       setError('An unexpected event occurred! Your strategists are confused. Please make another choice.');
       console.error(e);

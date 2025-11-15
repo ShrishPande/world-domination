@@ -3,6 +3,7 @@ export enum GameScreen {
   Auth = 'auth',
   Dashboard = 'dashboard',
   Leaderboard = 'leaderboard',
+  Profile = 'profile',
   Setup = 'setup',
   Playing = 'playing',
   GameOver = 'gameOver',
@@ -59,6 +60,11 @@ export interface GameState {
   economy: number;
   technology: number;
   territories: string[];
+  resources: Resources;
+  tradeRoutes: TradeRoute[];
+  activePolicies: Policy[];
+  availablePolicies: Policy[];
+  mitigationTools: MitigationTool[];
   rivalCivilizations: RivalCivilization[];
   intelligenceReports: IntelligenceReport[];
   activeMissions: EspionageMission[];
@@ -67,10 +73,54 @@ export interface GameState {
 
 export type ChoiceType = 'diplomacy' | 'military' | 'economy' | 'technology';
 
+export type ResourceType = 'food' | 'iron' | 'gold' | 'knowledge';
+
+export interface Resources {
+  food: number;
+  iron: number;
+  gold: number;
+  knowledge: number;
+}
+
+export interface TradeRoute {
+  id: string;
+  connectedTerritories: string[];
+  passiveIncome: number;
+  diplomacyBoost: number;
+  vulnerability: number; // 0-100, chance of disruption
+  status: 'active' | 'disrupted';
+}
+
+export type PolicyType = 'expansionism' | 'pacifism' | 'industrial_revolution' | 'conscription' | 'propaganda' | 'free_trade';
+
+export interface Policy {
+  id: string;
+  type: PolicyType;
+  name: string;
+  description: string;
+  effects: {
+    military?: number;
+    economy?: number;
+    technology?: number;
+    diplomacy?: number;
+    resources?: Partial<Resources>;
+  };
+}
+
+export interface MitigationTool {
+  id: string;
+  name: string;
+  description: string;
+  cost: Partial<Resources>;
+  available: boolean;
+}
+
 export interface Choice {
   id: string;
   text: string;
   type: ChoiceType;
+  stabilityRange?: { min: number; max: number }; // predictable outcomes
+  mitigationTools?: MitigationTool[];
 }
 
 export interface ScoreDetails {
@@ -96,6 +146,7 @@ export interface StartingCivilizationsResponse {
 export interface User {
   id: string;
   username: string;
+  isActive?: boolean;
 }
 
 export interface Score {
@@ -109,8 +160,23 @@ export interface Score {
 }
 
 export interface LeaderboardEntry {
+  userId: string;
   username: string;
   highScore: number;
   title: string;
   date: string;
 }
+
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  userRank: number | null;
+}
+
+// Game Modes
+export type GameMode = 'normal';

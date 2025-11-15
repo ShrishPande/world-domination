@@ -39,6 +39,32 @@ const retryApiCall = async <T,>(apiCall: () => Promise<T>, maxRetries: number = 
     throw new Error('Max retries exceeded');
 };
 
+const retryWithJsonParsing = async <T,>(operation: () => Promise<T>, maxRetries: number = 3, delay: number = 1000): Promise<T> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error: any) {
+            console.warn(`Operation attempt ${attempt} failed:`, error.message);
+
+            // If it's the last attempt, throw the error
+            if (attempt === maxRetries) {
+                throw error;
+            }
+
+            // Retry on JSON parsing errors or API errors
+            if (error.message.includes('malformed JSON') || error.status === 503 || error.status === 429) {
+                const waitTime = delay * attempt; // Exponential backoff
+                console.log(`Retrying operation in ${waitTime}ms...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+                // For other errors, don't retry
+                throw error;
+            }
+        }
+    }
+    throw new Error('Max retries exceeded');
+};
+
 export async function POST(request: Request) {
     if (!process.env.GEMINI_API_KEY) {
         return NextResponse.json({ message: 'GEMINI_API_KEY not set' }, { status: 500 });
@@ -58,28 +84,31 @@ export async function POST(request: Request) {
     
     Provide a final score out of 10,000. Give the player a fitting title for their reign (e.g., 'Regional Power', 'Global Hegemon', 'Fallen Empire'). Write a brief, insightful analysis of their performance. Return this as a JSON object.`;
 
-        const response = await retryApiCall(() => ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        score: { type: Type.NUMBER },
-                        title: { type: Type.STRING },
-                        analysis: { type: Type.STRING },
-                    },
-                    required: ["score", "title", "analysis"]
+        const parsed = await retryWithJsonParsing(async () => {
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            score: { type: Type.NUMBER },
+                            title: { type: Type.STRING },
+                            analysis: { type: Type.STRING },
+                        },
+                        required: ["score", "title", "analysis"]
+                    }
                 }
+            });
+
+            if (!response.text) {
+                throw new Error("No response text from AI");
             }
-        }));
 
-        if (!response.text) {
-            throw new Error("No response text from AI");
-        }
+            return parseJsonResponse<ScoreDetails>(response.text);
+        });
 
-        const parsed = parseJsonResponse<ScoreDetails>(response.text);
         return NextResponse.json(parsed);
     } catch (error: any) {
         console.error(error);

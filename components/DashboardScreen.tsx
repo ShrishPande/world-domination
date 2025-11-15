@@ -32,9 +32,17 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
       <Card className="text-center">
         <h1 className="text-4xl font-bold font-orbitron text-white">Welcome back, {currentUser?.username}</h1>
         <p className="text-gray-400 mt-2">The world is ripe for conquest. Will you forge a new destiny today?</p>
-        <Button onClick={() => onNavigate(GameScreen.Setup)} className="mt-6">
-            Launch New Campaign
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
+          <Button onClick={() => onNavigate(GameScreen.Setup)} className="flex-1">
+              Launch New Campaign
+          </Button>
+          <Button onClick={() => onNavigate(GameScreen.Leaderboard)} className="flex-1 bg-gray-600 hover:bg-gray-700">
+              View Leaderboard
+          </Button>
+          <Button onClick={() => onNavigate(GameScreen.Profile)} className="flex-1 bg-gray-600 hover:bg-gray-700">
+              View Profile
+          </Button>
+        </div>
       </Card>
 
       <Card>

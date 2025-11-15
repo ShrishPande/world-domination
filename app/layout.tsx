@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GameProvider } from "@/contexts/GameContext";
+import LogoutButton from "@/components/LogoutButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +23,8 @@ export default function RootLayout({
         <AuthProvider>
           <GameProvider>
             <div className="min-h-screen flex flex-col items-center p-4">
-              <div className="w-full max-w-7xl mx-auto flex-grow">
+              <div className="w-full max-w-7xl mx-auto flex-grow relative">
+                <LogoutButton />
                 {children}
               </div>
             </div>

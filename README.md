@@ -24,7 +24,18 @@ Unlike traditional strategy games, World Domination uses advanced AI to generate
 - **Visual Progress Tracking**: Real-time world map showing your territorial conquests
 - **Strategic Depth**: Balance military, economic, technological, and diplomatic approaches
 
-### 🏆 Competitive Elements
+### 🏛️ Extended Economy System
+- **Resource Management**: Control 4 key resources - Food (population stability), Iron (military power), Gold (economic transactions), Knowledge (technology boost)
+- **Trade Routes**: Establish diplomatic trade networks for passive income and relationship bonuses, but beware of disruptions
+- **Policy System**: Activate strategic policies like Expansionism, Pacifism, Industrial Revolution, Conscription, Propaganda, and Free Trade for gameplay customization
+- **Economic Strategy**: Resources and policies create complex trade-offs and strategic opportunities
+
+### 🎛️ Controlled Randomness
+- **Stability Ranges**: Choices show predictable outcome ranges (min-max) for strategic planning
+- **Mitigation Tools**: Use resources to re-roll decisions, boost stability, or predict outcomes
+- **Competitive Fairness**: Reduces luck-based gameplay while maintaining excitement
+
+### � Competitive Elements
 - **Global Leaderboards**: Compete with players worldwide for the highest domination scores
 - **Achievement System**: Unlock titles like "Regional Power," "Global Hegemon," or "Fallen Empire"
 - **Score Analysis**: Detailed performance breakdowns after each game
@@ -146,6 +157,77 @@ World Domination challenges you to think like a real historical leader. Every ch
 - **Accessible**: No complex rules - just strategic thinking and bold choices
 - **Rewarding**: Experience the thrill of building and maintaining an empire
 - **Secure**: Your progress and personal data are protected
+
+## 🛠️ Technical Architecture
+
+### Frontend
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript for type safety
+- **Styling**: Tailwind CSS with custom components
+- **State Management**: React Context API with useReducer for complex game state
+- **UI Components**: Custom component library with responsive design
+- **Icons**: Custom SVG icon set for game elements
+
+### Backend
+- **Runtime**: Next.js API Routes (Serverless functions)
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT tokens with bcrypt password hashing
+- **AI Integration**: Google Gemini 2.5-flash model via @google/genai SDK
+
+### Game Engine
+- **AI-Powered Logic**: Turn-based decisions processed by Gemini AI with structured JSON responses
+- **Game Modes**: Normal gameplay with AI-driven outcomes
+- **Difficulty Scaling**: Easy, Medium, Hard, Realistic with adjusted AI parameters
+- **State Persistence**: Client-side state management with server-side score tracking
+
+### Key Technologies
+- **Next.js 14**: Full-stack React framework
+- **React 18**: Component-based UI with hooks and concurrent features
+- **TypeScript**: Static typing for maintainable codebase
+- **MongoDB**: NoSQL database for user accounts and leaderboards
+- **Google Gemini AI**: Advanced language model for dynamic game narratives
+- **Tailwind CSS**: Utility-first CSS framework
+- **JWT**: Secure token-based authentication
+- **bcryptjs**: Password hashing for security
+
+### API Endpoints
+- **Authentication**: `/api/auth/*` - User registration, login, password updates
+- **Game Logic**: `/api/gemini/*` - AI-powered game state processing
+- **Data**: `/api/scores/*` - Score tracking and leaderboard management
+
+### Game State Management
+- **Context Providers**: AuthContext and GameContext for global state
+- **Complex State**: Game state includes territories, resources, policies, rival civilizations
+- **Real-time Updates**: Client-side state updates with server synchronization
+- **Error Handling**: Comprehensive error boundaries and retry mechanisms
+
+### AI Integration Details
+- **Model**: Gemini 2.5-flash for fast, high-quality responses
+- **Structured Output**: JSON schema validation for consistent game data
+- **Retry Logic**: Exponential backoff for API reliability
+- **Prompt Engineering**: Context-aware prompts for different game phases
+- **Response Parsing**: Robust JSON parsing with error recovery
+
+### Security Features
+- **Password Security**: bcrypt hashing with salt rounds
+- **Token Management**: JWT with 7-day expiration and secure storage
+- **Input Validation**: Server-side validation for all API inputs
+- **Rate Limiting**: Built-in protection against abuse
+- **Data Sanitization**: MongoDB injection prevention
+
+### Performance Optimizations
+- **Server-Side Rendering**: Next.js for improved SEO and initial load
+- **Code Splitting**: Automatic route-based code splitting
+- **Image Optimization**: Next.js built-in image optimization
+- **Caching**: Appropriate caching strategies for static assets
+- **Lazy Loading**: Component and route lazy loading
+
+### Development & Deployment
+- **Package Manager**: npm with lockfile for reproducible builds
+- **Linting**: ESLint with Next.js configuration
+- **Build Process**: Next.js optimized production builds
+- **Environment Variables**: Secure configuration management
+- **Database Connection**: MongoDB connection pooling
 
 ---
 

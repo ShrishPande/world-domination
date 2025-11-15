@@ -9,23 +9,27 @@ interface TimerProps {
 
 const Timer: React.FC<TimerProps> = ({ onTimeUp, isPaused }) => {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
     if (isPaused) {
       return;
     }
 
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && !hasTriggered) {
+      setHasTriggered(true);
       onTimeUp();
       return;
     }
 
-    const intervalId = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
-    }, 1000);
+    if (timeLeft > 0) {
+      const intervalId = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [timeLeft, onTimeUp, isPaused]);
+      return () => clearInterval(intervalId);
+    }
+  }, [timeLeft, onTimeUp, isPaused, hasTriggered]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;

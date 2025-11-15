@@ -57,6 +57,71 @@ const espionageMissionSchema = {
     required: ["id", "type", "target", "risk", "reward", "duration", "status"]
 };
 
+const resourcesSchema = {
+    type: Type.OBJECT,
+    properties: {
+        food: { type: Type.NUMBER, description: "Food resource for population stability" },
+        iron: { type: Type.NUMBER, description: "Iron resource for military power" },
+        gold: { type: Type.NUMBER, description: "Gold resource for economic transactions" },
+        knowledge: { type: Type.NUMBER, description: "Knowledge resource for technology boost" }
+    },
+    required: ["food", "iron", "gold", "knowledge"]
+};
+
+const tradeRouteSchema = {
+    type: Type.OBJECT,
+    properties: {
+        id: { type: Type.STRING },
+        connectedTerritories: { type: Type.ARRAY, items: { type: Type.STRING } },
+        passiveIncome: { type: Type.NUMBER },
+        diplomacyBoost: { type: Type.NUMBER },
+        vulnerability: { type: Type.NUMBER },
+        status: { type: Type.STRING, enum: ['active', 'disrupted'] }
+    },
+    required: ["id", "connectedTerritories", "passiveIncome", "diplomacyBoost", "vulnerability", "status"]
+};
+
+const policySchema = {
+    type: Type.OBJECT,
+    properties: {
+        id: { type: Type.STRING },
+        type: { type: Type.STRING, enum: ['expansionism', 'pacifism', 'industrial_revolution', 'conscription', 'propaganda', 'free_trade'] },
+        name: { type: Type.STRING },
+        description: { type: Type.STRING },
+        effects: {
+            type: Type.OBJECT,
+            properties: {
+                military: { type: Type.NUMBER },
+                economy: { type: Type.NUMBER },
+                technology: { type: Type.NUMBER },
+                diplomacy: { type: Type.NUMBER },
+                resources: {
+                    type: Type.OBJECT,
+                    properties: {
+                        food: { type: Type.NUMBER },
+                        iron: { type: Type.NUMBER },
+                        gold: { type: Type.NUMBER },
+                        knowledge: { type: Type.NUMBER }
+                    }
+                }
+            }
+        }
+    },
+    required: ["id", "type", "name", "description", "effects"]
+};
+
+const mitigationToolSchema = {
+    type: Type.OBJECT,
+    properties: {
+        id: { type: Type.STRING },
+        name: { type: Type.STRING },
+        description: { type: Type.STRING },
+        cost: resourcesSchema,
+        available: { type: Type.BOOLEAN }
+    },
+    required: ["id", "name", "description", "cost", "available"]
+};
+
 const gameStateSchema = {
     type: Type.OBJECT,
     properties: {
@@ -71,6 +136,27 @@ const gameStateSchema = {
             type: Type.ARRAY,
             items: { type: Type.STRING },
             description: `A list of regions controlled. Must be a subset of: ${WORLD_REGIONS.join(', ')}.`
+        },
+        resources: resourcesSchema,
+        tradeRoutes: {
+            type: Type.ARRAY,
+            items: tradeRouteSchema,
+            description: "Initially empty array - trade routes established through diplomacy"
+        },
+        activePolicies: {
+            type: Type.ARRAY,
+            items: policySchema,
+            description: "Initially empty array - policies activated by player choice"
+        },
+        availablePolicies: {
+            type: Type.ARRAY,
+            items: policySchema,
+            description: "Available policies that can be chosen"
+        },
+        mitigationTools: {
+            type: Type.ARRAY,
+            items: mitigationToolSchema,
+            description: "Tools available to mitigate randomness"
         },
         rivalCivilizations: {
             type: Type.ARRAY,
@@ -93,7 +179,7 @@ const gameStateSchema = {
             description: "Strategic information about all world territories"
         }
     },
-    required: ["year", "rulerTitle", "countryName", "population", "military", "economy", "technology", "territories", "rivalCivilizations", "intelligenceReports", "activeMissions", "worldTerritories"]
+    required: ["year", "rulerTitle", "countryName", "population", "military", "economy", "technology", "territories", "resources", "tradeRoutes", "activePolicies", "availablePolicies", "mitigationTools", "rivalCivilizations", "intelligenceReports", "activeMissions", "worldTerritories"]
 };
 
 const choicesSchema = {
@@ -103,7 +189,20 @@ const choicesSchema = {
         properties: {
             id: { type: Type.STRING, description: "A unique identifier like 'choice_1'" },
             text: { type: Type.STRING, description: "The text for the choice presented to the player." },
-            type: { type: Type.STRING, enum: ['diplomacy', 'military', 'economy', 'technology'] }
+            type: { type: Type.STRING, enum: ['diplomacy', 'military', 'economy', 'technology'] },
+            stabilityRange: {
+                type: Type.OBJECT,
+                properties: {
+                    min: { type: Type.NUMBER, minimum: 0, maximum: 100 },
+                    max: { type: Type.NUMBER, minimum: 0, maximum: 100 }
+                },
+                description: "Optional range for predictable outcomes (0-100 scale)"
+            },
+            mitigationTools: {
+                type: Type.ARRAY,
+                items: mitigationToolSchema,
+                description: "Optional tools to mitigate randomness"
+            }
         },
         required: ["id", "text", "type"]
     }
@@ -145,6 +244,32 @@ const retryApiCall = async <T,>(apiCall: () => Promise<T>, maxRetries: number = 
     throw new Error('Max retries exceeded');
 };
 
+const retryWithJsonParsing = async <T,>(operation: () => Promise<T>, maxRetries: number = 3, delay: number = 1000): Promise<T> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error: any) {
+            console.warn(`Operation attempt ${attempt} failed:`, error.message);
+
+            // If it's the last attempt, throw the error
+            if (attempt === maxRetries) {
+                throw error;
+            }
+
+            // Retry on JSON parsing errors or API errors
+            if (error.message.includes('malformed JSON') || error.status === 503 || error.status === 429) {
+                const waitTime = delay * attempt; // Exponential backoff
+                console.log(`Retrying operation in ${waitTime}ms...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+                // For other errors, don't retry
+                throw error;
+            }
+        }
+    }
+    throw new Error('Max retries exceeded');
+};
+
 export async function POST(request: Request) {
     if (!process.env.GEMINI_API_KEY) {
         return NextResponse.json({ message: 'GEMINI_API_KEY not set' }, { status: 500 });
@@ -153,52 +278,85 @@ export async function POST(request: Request) {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     try {
-        const { country, year, difficulty } = await request.json();
+        const { country, year, difficulty, gameMode } = await request.json();
 
-        const prompt = `You are a world domination simulation AI. The user has chosen to start as the leader of the ${country} in the year ${year} on '${difficulty}' difficulty.
+        const prompt = `You are a World Domination Simulation AI.
 
-WORLD SETUP:
-- Available territories: ${WORLD_REGIONS.join(', ')}
-- Each territory has terrain, resources, strategic value, defense bonuses, and supply costs
-- Rival civilizations exist with different personalities: Aggressor (military-focused), Diplomat (alliance-focused), Trader (economy-focused), Scientist (tech-focused), Wildcard (unpredictable)
+Generate a game start for the ${country} civilization in the year ${year} on '${difficulty}' difficulty.
+
+WORLD FRAMEWORK:
+- World regions: ${WORLD_REGIONS.join(', ')}
+- Each region has defined terrain, resources, defense bonuses, strategic value, and supply cost.
+- Include 3–4 rival civilizations with distinct personalities: Aggressor, Diplomat, Trader, Scientist, Wildcard.
+
+RESOURCES:
+- Food (population stability)
+- Iron (military strength)
+- Gold (economic power)
+- Knowledge (technology progress)
+
+POLICIES:
+- Available pool: Expansionism, Pacifism, Industrial Revolution, Conscription, Propaganda, Free Trade.
+- Provide 2–3 available policies. Active policies: empty.
+
+TRADE SYSTEM:
+- No initial trade routes. They can be created diplomatically and give passive income but are disruptable.
 
 DIFFICULTY SCALING:
-- For 'easy', provide a strong starting position with some advantages.
-- For 'medium', provide a balanced start.
-- For 'hard', provide a challenging start with clear disadvantages.
-- For 'realistic', provide a historically plausible, complex start that may be difficult.
+- Easy: strong start advantage.
+- Medium: balanced.
+- Hard: disadvantaged.
+- Realistic: historically grounded, complex, challenging.
 
-Generate an initial game state with:
-1. Player's starting stats and territories
-2. 3-4 rival civilizations, each with different personalities, starting territories, and initial diplomatic relations
-3. World territory information with strategic details
-4. Intelligence system initialized (no reports yet, empty espionage missions)
+MITIGATION SYSTEM:
+- Include re-rolls or stability boosts (cost resources).
+- All strategic choices must show outcome stability ranges (0–100).
 
-Provide a brief, engaging description of their starting situation. Also provide a summary in 3-4 bullet points, each 4-6 words only, highlighting the key advantages, challenges, and opportunities with specific numbers where relevant. Offer 3-4 distinct strategic choices for their first move, considering rival positions and territory values. Return the response as a JSON object.`;
+GENERATE THE GAME STATE:
+1. Player starting stats (Near accurate Population estimate for the era, Military/Economy/Tech 100–400), territories (1–3), resources.
+2. 3–4 rival civilizations with territories, personality, and initial diplomatic stance.
+3. World region overview (concise but strategic).
+4. Intelligence system initialized (no reports, empty missions).
+5. Available policies and empty active policies/trade routes.
+6. Basic mitigation tools (1–2 items).
+7. Short engaging starting description.
+8. Three 4–6 word bullet summaries (advantages/challenges/opportunities).
+9. 3–4 strategic first-move options with stability ranges and mitigation notes.
+
+Return everything as a JSON object.
+`;
         
-        const response = await retryApiCall(() => ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        description: { type: Type.STRING },
-                        summary: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        gameState: gameStateSchema,
-                        choices: choicesSchema,
-                    },
-                    required: ["description", "summary", "gameState", "choices"]
+        const parsed = await Promise.race([
+            retryWithJsonParsing(async () => {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: prompt,
+                    config: {
+                        responseMimeType: 'application/json',
+                        responseSchema: {
+                            type: Type.OBJECT,
+                            properties: {
+                                description: { type: Type.STRING },
+                                summary: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                gameState: gameStateSchema,
+                                choices: choicesSchema,
+                            },
+                            required: ["description", "summary", "gameState", "choices"]
+                        }
+                    }
+                });
+
+                if (!response.text) {
+                    throw new Error("No response text from AI");
                 }
-            }
-        }));
 
-        if (!response.text) {
-            throw new Error("No response text from AI");
-        }
+                return parseJsonResponse<InitialGameResponse>(response.text);
+            }),
+            new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error("Request timeout after 30 seconds")), 30000)
+            )
+        ]);
 
-        const parsed = parseJsonResponse<InitialGameResponse>(response.text);
         return NextResponse.json(parsed);
     } catch (error: any) {
         console.error(error);

@@ -3,22 +3,29 @@ import React, { useState } from 'react';
 import { getStartingCivilizations } from '../services/geminiService';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import BackButton from './ui/BackButton';
 import GlobeIcon from './icons/GlobeIcon';
-import { Difficulty } from '../types';
+import { Difficulty, GameMode } from '../types';
 
 interface SetupScreenProps {
-  onStart: (country: string, year: number, difficulty: Difficulty) => void;
+  onStart: (country: string, year: number, difficulty: Difficulty, gameMode: GameMode) => void;
   isLoading: boolean;
   error: string | null;
 }
 
 const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) => {
-  const [step, setStep] = useState<'difficulty' | 'year' | 'civilization'>('difficulty');
+  const [step, setStep] = useState<'mode' | 'difficulty' | 'year' | 'civilization'>('mode');
+  const [gameMode, setGameMode] = useState<GameMode>('normal');
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [year, setYear] = useState<string>('');
   const [civilizations, setCivilizations] = useState<string[]>([]);
   const [isFetchingCivs, setIsFetchingCivs] = useState<boolean>(false);
   const [internalError, setInternalError] = useState<string | null>(null);
+
+  const handleModeSelect = (selectedMode: GameMode) => {
+    setGameMode(selectedMode);
+    setStep('difficulty');
+  };
 
   const handleDifficultySelect = (selectedDifficulty: Difficulty) => {
     setDifficulty(selectedDifficulty);
@@ -53,7 +60,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
 
   const handleCivSelection = (civ: string) => {
     if (!difficulty) return;
-    onStart(civ, parseInt(year), difficulty);
+    onStart(civ, parseInt(year), difficulty, gameMode);
   };
 
   const resetToDifficulty = () => {
@@ -69,6 +76,32 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
     setCivilizations([]);
     setInternalError(null);
   }
+
+  const resetToMode = () => {
+    setStep('mode');
+    setDifficulty(null);
+    setYear('');
+    setCivilizations([]);
+    setInternalError(null);
+  }
+
+  const renderModeStep = () => (
+    <Card className="w-full max-w-2xl">
+      <div className="text-center">
+        <div className="flex justify-center items-center gap-4 mb-4">
+           <GlobeIcon className="w-12 h-12 text-cyan-400"/>
+           <h1 className="text-4xl font-bold font-orbitron text-white">Game Mode</h1>
+        </div>
+        <p className="text-gray-400 mb-8">Choose your game mode to begin your conquest.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+          <Button onClick={() => handleModeSelect('normal')} className="bg-blue-600 hover:bg-blue-700">Normal</Button>
+      </div>
+       <div className="mt-4 text-center text-sm text-gray-500 space-y-1">
+            <p><span className="font-bold text-gray-400">Normal:</span> Standard world domination gameplay.</p>
+        </div>
+    </Card>
+  );
 
   const renderDifficultyStep = () => (
     <Card className="w-full max-w-2xl">
@@ -181,6 +214,8 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
   
   const renderStep = () => {
       switch(step) {
+          case 'mode':
+              return renderModeStep();
           case 'difficulty':
               return renderDifficultyStep();
           case 'year':
@@ -188,12 +223,17 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
           case 'civilization':
               return renderCivilizationStep();
           default:
-              return renderDifficultyStep();
+              return renderModeStep();
       }
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen animate-fadeIn">
+      {(step === 'difficulty' || step === 'mode') && (
+        <div className="w-full max-w-2xl mb-4">
+          <BackButton />
+        </div>
+      )}
       {renderStep()}
     </div>
   );

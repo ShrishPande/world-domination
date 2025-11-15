@@ -9,6 +9,10 @@ import MilitaryIcon from './icons/MilitaryIcon';
 import EconomyIcon from './icons/EconomyIcon';
 import TechIcon from './icons/TechIcon';
 import GlobeIcon from './icons/GlobeIcon';
+import FoodIcon from './icons/FoodIcon';
+import IronIcon from './icons/IronIcon';
+import GoldIcon from './icons/GoldIcon';
+import KnowledgeIcon from './icons/KnowledgeIcon';
 import WorldMap from './WorldMap';
 
 interface GameScreenProps {
@@ -67,6 +71,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
                 <StatDisplay icon={<EconomyIcon />} label="Economy" value={gameState.economy} />
                 <StatDisplay icon={<TechIcon />} label="Technology" value={gameState.technology} />
             </div>
+            <div className="mt-6">
+                <h3 className="text-lg font-orbitron text-white mb-4">Resources</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <StatDisplay icon={<FoodIcon />} label="Food" value={gameState.resources?.food || 0} />
+                    <StatDisplay icon={<IronIcon />} label="Iron" value={gameState.resources?.iron || 0} />
+                    <StatDisplay icon={<GoldIcon />} label="Gold" value={gameState.resources?.gold || 0} />
+                    <StatDisplay icon={<KnowledgeIcon />} label="Knowledge" value={gameState.resources?.knowledge || 0} />
+                </div>
+            </div>
         </Card>
         <Card>
             <div className="flex items-center gap-3 mb-4">
@@ -120,6 +133,57 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
                 ))}
             </div>
         </Card>
+        <Card>
+            <h3 className="text-xl font-orbitron text-white mb-4">Trade Routes</h3>
+            <div className="space-y-3">
+                {gameState.tradeRoutes.length === 0 ? (
+                    <p className="text-gray-400">No active trade routes</p>
+                ) : (
+                    gameState.tradeRoutes.map((route) => (
+                        <div key={route.id} className={`bg-gray-900/50 p-3 rounded-md border ${route.status === 'active' ? 'border-green-500/50' : 'border-red-500/50'}`}>
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-bold text-cyan-300">{route.connectedTerritories.join(' ↔ ')}</h4>
+                                <span className={`px-2 py-1 rounded text-xs font-bold ${route.status === 'active' ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                                    {route.status.toUpperCase()}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <div className="font-bold text-green-400">+{route.passiveIncome}</div>
+                                    <div className="text-gray-500">Income</div>
+                                </div>
+                                <div>
+                                    <div className="font-bold text-blue-400">+{route.diplomacyBoost}</div>
+                                    <div className="text-gray-500">Diplomacy</div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Vulnerability: {route.vulnerability}%</p>
+                        </div>
+                    ))
+                )}
+            </div>
+        </Card>
+        <Card>
+            <h3 className="text-xl font-orbitron text-white mb-4">Active Policies</h3>
+            <div className="space-y-3">
+                {gameState.activePolicies.length === 0 ? (
+                    <p className="text-gray-400">No active policies</p>
+                ) : (
+                    gameState.activePolicies.map((policy) => (
+                        <div key={policy.id} className="bg-gray-900/50 p-3 rounded-md border border-purple-500/50">
+                            <h4 className="font-bold text-purple-300">{policy.name}</h4>
+                            <p className="text-sm text-gray-400 mt-1">{policy.description}</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                                {policy.effects.military && <div>Military: {policy.effects.military > 0 ? '+' : ''}{policy.effects.military}</div>}
+                                {policy.effects.economy && <div>Economy: {policy.effects.economy > 0 ? '+' : ''}{policy.effects.economy}</div>}
+                                {policy.effects.technology && <div>Tech: {policy.effects.technology > 0 ? '+' : ''}{policy.effects.technology}</div>}
+                                {policy.effects.diplomacy && <div>Diplomacy: {policy.effects.diplomacy > 0 ? '+' : ''}{policy.effects.diplomacy}</div>}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </Card>
       </div>
 
       {/* Right Panel: Event and Choices */}
@@ -163,6 +227,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
                     >
                         <span className="font-bold uppercase text-xs tracking-wider opacity-80">{choice.type}</span>
                         <p className="text-white mt-1">{choice.text}</p>
+                        {choice.stabilityRange && (
+                            <div className="text-xs text-gray-300 mt-2">
+                                Stability: {choice.stabilityRange.min}-{choice.stabilityRange.max}
+                            </div>
+                        )}
+                        {choice.mitigationTools && choice.mitigationTools.length > 0 && (
+                            <div className="text-xs text-yellow-300 mt-1">
+                                Mitigation available
+                            </div>
+                        )}
                     </button>
                 ))}
             </div>

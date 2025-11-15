@@ -1,4 +1,4 @@
-import { Score, LeaderboardEntry, User } from '../types';
+import { Score, LeaderboardEntry, LeaderboardResponse, User } from '../types';
 
 const API_BASE_URL = '/api';
 
@@ -58,7 +58,27 @@ export const getUserScores = async (userId: string): Promise<Score[]> => {
     return handleResponse(response);
 };
 
-export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-    const response = await fetch(`${API_BASE_URL}/leaderboard`);
+export const getLeaderboard = async (page = 1, limit = 10, userId?: string): Promise<LeaderboardResponse> => {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (userId) params.append('userId', userId);
+    const response = await fetch(`${API_BASE_URL}/leaderboard?${params}`);
+    return handleResponse(response);
+};
+
+export const updateUserPassword = async (userId: string, newPassword: string): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, newPassword }),
+    });
+    return handleResponse(response);
+};
+
+export const deleteUser = async (userId: string): Promise<User> => {
+    const response = await fetch(`${API_BASE_URL}/auth/delete-user`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+    });
     return handleResponse(response);
 };
