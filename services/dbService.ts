@@ -1,10 +1,7 @@
 import { Score, LeaderboardEntry, User } from '../types';
 
-// In a real deployed app, you might use an environment variable for the API base URL.
-// For this setup, we use an absolute URL to ensure the frontend dev server can reach the backend.
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
-// A helper function to handle API responses
 const handleResponse = async (response: Response) => {
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'An unknown API error occurred.' }));
@@ -27,8 +24,6 @@ const handleResponse = async (response: Response) => {
     return transformId(data);
 };
 
-// --- API Functions ---
-
 export const loginUser = async (username: string): Promise<User> => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -47,8 +42,7 @@ export const signupUser = async (username: string): Promise<User> => {
     return handleResponse(response);
 };
 
-export const saveScore = async (score: Score): Promise<Score> => {
-    // The backend uses userId, not the full user object
+export const saveScore = async (score: Omit<Score, 'id'>): Promise<Score> => {
     const payload = { ...score, userId: score.userId };
     
     const response = await fetch(`${API_BASE_URL}/scores`, {
@@ -66,23 +60,5 @@ export const getUserScores = async (userId: string): Promise<Score[]> => {
 
 export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
     const response = await fetch(`${API_BASE_URL}/leaderboard`);
-    // This endpoint is already shaped correctly by the aggregation pipeline
-    return response.json(); 
-};
-
-// --- Old Local Storage Functions (for reference, now unused) ---
-
-// These have been replaced by the API calls above.
-
-const USERS_KEY = 'world_dom_users';
-const SCORES_KEY = 'world_dom_scores';
-
-export const findUserByUsername = async (username: string): Promise<User | null> => {
-    // This is now handled by POST /api/auth/login
-    throw new Error("findUserByUsername is deprecated. Use loginUser.");
-};
-
-export const createUser = async (username:string): Promise<User> => {
-    // This is now handled by POST /api/auth/signup
-    throw new Error("createUser is deprecated. Use signupUser.");
+    return handleResponse(response);
 };

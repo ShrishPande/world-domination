@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
 
@@ -7,6 +8,7 @@ const SignUp: React.FC = () => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const { signup, isLoading } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +23,7 @@ const SignUp: React.FC = () => {
     }
     try {
       await signup(username);
+      router.push('/');
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

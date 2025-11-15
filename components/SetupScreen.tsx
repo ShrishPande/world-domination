@@ -107,6 +107,12 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, isLoading, error }) 
       {internalError && (
           <div className="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-md mb-6 text-center">
               {internalError}
+              <button
+                  onClick={() => setInternalError(null)}
+                  className="mt-2 text-cyan-400 hover:text-cyan-300 underline"
+              >
+                  Try Again
+              </button>
           </div>
       )}
       {error && (

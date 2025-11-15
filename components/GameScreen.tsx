@@ -15,6 +15,7 @@ interface GameScreenProps {
   gameState: GameState;
   choices: Choice[];
   description: string;
+  summary: string[];
   onSelectChoice: (choice: Choice) => void;
   onTimeUp: () => void;
   isLoading: boolean;
@@ -35,7 +36,7 @@ const getChoiceColor = (type: ChoiceType): string => {
     return 'bg-gray-500/80 hover:bg-gray-600/80 border-gray-400';
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description, onSelectChoice, onTimeUp, isLoading, error }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description, summary, onSelectChoice, onTimeUp, isLoading, error }) => {
 
   const territoriesConquered = gameState.territories.length;
   const worldPercentage = ((territoriesConquered / WORLD_REGIONS.length) * 100).toFixed(1);
@@ -91,6 +92,19 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
         </Card>
         <Card>
             <h2 className="text-2xl font-orbitron text-white mb-4">Strategic Update</h2>
+            {summary && (
+                <div className="mb-4 p-3 bg-cyan-900/30 border border-cyan-500/50 rounded-md">
+                    <h3 className="text-lg font-orbitron text-cyan-300 mb-2">Key Highlights</h3>
+                    <ul className="text-gray-200 text-sm leading-relaxed space-y-1">
+                        {summary.map((point, index) => (
+                            <li key={index} className="flex items-start">
+                                <span className="text-cyan-400 mr-2">•</span>
+                                <span className="font-bold">{point}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <div className="prose prose-invert prose-p:text-gray-300 min-h-[100px] bg-gray-900/50 p-4 rounded-md border border-gray-700">
               <p>{description}</p>
             </div>

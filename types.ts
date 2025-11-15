@@ -37,6 +37,7 @@ export interface ScoreDetails {
 
 export interface InitialGameResponse {
   description: string;
+  summary: string[];
   gameState: GameState;
   choices: Choice[];
 }

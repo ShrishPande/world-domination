@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
 
@@ -6,6 +7,7 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +18,7 @@ const Login: React.FC = () => {
     }
     try {
       await login(username);
-      // On success, the AuthProvider will update the state and the App component will navigate away.
+      router.push('/');
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
