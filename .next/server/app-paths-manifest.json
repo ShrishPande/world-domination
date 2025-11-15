@@ -1,0 +1,9 @@
+{
+  "/page": "app/page.js",
+  "/setup/page": "app/setup/page.js",
+  "/game/page": "app/game/page.js",
+  "/api/gemini/process-turn/route": "app/api/gemini/process-turn/route.js",
+  "/api/gemini/calculate-score/route": "app/api/gemini/calculate-score/route.js",
+  "/api/scores/route": "app/api/scores/route.js",
+  "/game-over/page": "app/game-over/page.js"
+}
