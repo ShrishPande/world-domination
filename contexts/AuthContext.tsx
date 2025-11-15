@@ -6,8 +6,9 @@ import { loginUser, signupUser } from '../services/dbService';
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (username: string) => Promise<User | null>;
-  signup: (username: string) => Promise<User | null>;
+  token: string | null;
+  login: (username: string, password: string) => Promise<User | null>;
+  signup: (username: string, password: string) => Promise<User | null>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -16,34 +17,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
+      const storedToken = localStorage.getItem('authToken');
+      if (storedUser && storedToken) {
         setCurrentUser(JSON.parse(storedUser));
+        setToken(storedToken);
       }
     } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
+      console.error("Failed to parse stored auth data", error);
+      // Clear corrupted data
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('authToken');
     } finally {
         setIsLoading(false);
     }
   }, []);
 
-  const login = async (username: string): Promise<User | null> => {
+  const login = async (username: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
-        const user = await loginUser(username);
-        if (user) {
-            setCurrentUser(user);
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            return user;
+        const response = await loginUser(username, password);
+        if (response.user && response.token) {
+            setCurrentUser(response.user);
+            setToken(response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            localStorage.setItem('authToken', response.token);
+            return response.user;
         }
         return null;
     } catch(error) {
       console.error("Login failed:", error);
-      // Let the component handle displaying the error message by re-throwing
       throw error;
     }
     finally {
@@ -51,13 +59,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signup = async (username: string): Promise<User | null> => {
+  const signup = async (username: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
-        const newUser = await signupUser(username);
-        setCurrentUser(newUser);
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-        return newUser;
+        const response = await signupUser(username, password);
+        if (response.user && response.token) {
+            setCurrentUser(response.user);
+            setToken(response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            localStorage.setItem('authToken', response.token);
+            return response.user;
+        }
+        return null;
     } catch(error) {
       console.error("Signup failed:", error);
       throw error;
@@ -69,11 +82,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setCurrentUser(null);
+    setToken(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, token, login, signup, logout, isLoading }}>
       {!isLoading && children}
     </AuthContext.Provider>
   );

@@ -3,6 +3,60 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { GameState, Choice, TurnResponse, Difficulty } from '@/types';
 import { WORLD_REGIONS } from '@/constants';
 
+const rivalCivilizationSchema = {
+    type: Type.OBJECT,
+    properties: {
+        name: { type: Type.STRING },
+        personality: { type: Type.STRING, enum: ['aggressor', 'diplomat', 'trader', 'scientist', 'wildcard'] },
+        territories: { type: Type.ARRAY, items: { type: Type.STRING } },
+        military: { type: Type.NUMBER },
+        economy: { type: Type.NUMBER },
+        technology: { type: Type.NUMBER },
+        diplomacyStatus: { type: Type.STRING, enum: ['hostile', 'neutral', 'friendly', 'allied'] },
+        lastKnownActivity: { type: Type.STRING }
+    },
+    required: ["name", "personality", "territories", "military", "economy", "technology", "diplomacyStatus", "lastKnownActivity"]
+};
+
+const territoryInfoSchema = {
+    type: Type.OBJECT,
+    properties: {
+        name: { type: Type.STRING },
+        terrain: { type: Type.STRING, enum: ['plains', 'mountains', 'forests', 'desert', 'coastal', 'urban'] },
+        resources: { type: Type.ARRAY, items: { type: Type.STRING } },
+        strategicValue: { type: Type.NUMBER },
+        defenseBonus: { type: Type.NUMBER },
+        supplyCost: { type: Type.NUMBER }
+    },
+    required: ["name", "terrain", "resources", "strategicValue", "defenseBonus", "supplyCost"]
+};
+
+const intelligenceReportSchema = {
+    type: Type.OBJECT,
+    properties: {
+        target: { type: Type.STRING },
+        intelType: { type: Type.STRING, enum: ['military', 'economic', 'technological', 'territorial', 'diplomatic'] },
+        accuracy: { type: Type.NUMBER },
+        lastUpdated: { type: Type.STRING },
+        data: { type: Type.STRING, description: "JSON string containing intelligence data" }
+    },
+    required: ["target", "intelType", "accuracy", "lastUpdated", "data"]
+};
+
+const espionageMissionSchema = {
+    type: Type.OBJECT,
+    properties: {
+        id: { type: Type.STRING },
+        type: { type: Type.STRING, enum: ['spy', 'sabotage', 'counterintel'] },
+        target: { type: Type.STRING },
+        risk: { type: Type.NUMBER },
+        reward: { type: Type.NUMBER },
+        duration: { type: Type.NUMBER },
+        status: { type: Type.STRING, enum: ['planning', 'active', 'completed', 'failed'] }
+    },
+    required: ["id", "type", "target", "risk", "reward", "duration", "status"]
+};
+
 const gameStateSchema = {
     type: Type.OBJECT,
     properties: {
@@ -13,13 +67,33 @@ const gameStateSchema = {
         military: { type: Type.NUMBER, description: "Military strength score from 1 to 1000" },
         economy: { type: Type.NUMBER, description: "Economic power score from 1 to 1000" },
         technology: { type: Type.NUMBER, description: "Technology level score from 1 to 1000" },
-        territories: { 
-            type: Type.ARRAY, 
+        territories: {
+            type: Type.ARRAY,
             items: { type: Type.STRING },
             description: `A list of regions controlled. Must be a subset of: ${WORLD_REGIONS.join(', ')}.`
         },
+        rivalCivilizations: {
+            type: Type.ARRAY,
+            items: rivalCivilizationSchema,
+            description: "Updated rival civilizations with their actions and status changes"
+        },
+        intelligenceReports: {
+            type: Type.ARRAY,
+            items: intelligenceReportSchema,
+            description: "Intelligence gathered through espionage missions"
+        },
+        activeMissions: {
+            type: Type.ARRAY,
+            items: espionageMissionSchema,
+            description: "Active espionage missions and their status"
+        },
+        worldTerritories: {
+            type: Type.ARRAY,
+            items: territoryInfoSchema,
+            description: "Strategic information about all world territories"
+        }
     },
-    required: ["year", "rulerTitle", "countryName", "population", "military", "economy", "technology", "territories"]
+    required: ["year", "rulerTitle", "countryName", "population", "military", "economy", "technology", "territories", "rivalCivilizations", "intelligenceReports", "activeMissions", "worldTerritories"]
 };
 
 const choicesSchema = {
@@ -29,7 +103,7 @@ const choicesSchema = {
         properties: {
             id: { type: Type.STRING, description: "A unique identifier like 'choice_1'" },
             text: { type: Type.STRING, description: "The text for the choice presented to the player." },
-            type: { type: Type.STRING, enum: ['diplomacy', 'military', 'economy', 'technology'] }
+            type: { type: Type.STRING, enum: ['diplomacy', 'military', 'economy', 'technology', 'espionage'] }
         },
         required: ["id", "text", "type"]
     }
@@ -83,20 +157,32 @@ export async function POST(request: Request) {
 
         const prompt = `You are a world domination simulation AI. The current game state is ${JSON.stringify(currentState)}. The player, the ${currentState.rulerTitle} of ${currentState.countryName}, has chosen to: "${choice.text}". The game difficulty is '${difficulty}'.
 
-    Based on this choice, the historical context, and the difficulty, generate a surprising and unpredictable outcome. Avoid straightforward success or failure. Every choice should have trade-offs, unintended consequences, or unexpected twists.
+    COMPETITIVE MECHANICS:
+    - Consider rival civilizations' personalities and likely counter-moves
+    - Calculate success probabilities based on: technology differences, resource availability, diplomatic relations, terrain advantages, supply line costs
+    - Rival actions: Aggressors may attack weak neighbors, Diplomats form alliances, Traders expand trade networks, Scientists advance tech, Wildcards act unpredictably
+    - Espionage missions may complete this turn, providing intelligence or causing effects
 
+    PROBABILITY CALCULATIONS (Hidden but Influential):
+    - Military success: Base 50% + (tech_diff * 5%) + (resource_advantage * 10%) - (terrain_penalty * 8%) - (supply_cost_penalty * 3%)
+    - Economic deals: Base 60% + (diplomacy_bonus * 8%) + (trade_networks * 6%) - (rival_interference * 12%)
+    - Tech research: Base 70% + (existing_tech * 3%) + (scientist_focus * 10%) - (instability_penalty * 5%)
+    - Diplomatic negotiations: Base 55% + (charisma_bonus * 7%) + (alliance_strength * 9%) - (hostile_rivals * 11%)
+
+    DIFFICULTY SCALING:
     - On 'easy' difficulty, lean towards more favorable outcomes but still include a minor complication or twist.
     - On 'medium' difficulty, outcomes should be a balanced mix of positive and negative effects.
     - On 'hard' difficulty, choices often lead to difficult new problems, and positive results should be hard-won and limited. Major negative events can occur randomly.
     - On 'realistic' difficulty, outcomes should be complex, multi-faceted, and grounded in historical possibility. Unforeseen global events should be factored in.
 
     Follow these steps:
-    1. Write a compelling description of the nuanced outcome. It should not be a simple "success!" or "failure!". Introduce a twist. For example, a military victory could lead to a plague in the army, a rebellion in the newly conquered territory, or a new powerful enemy coalition forming. A trade deal could empower a future rival or cause social unrest at home.
+    1. Write a compelling description of the nuanced outcome, considering rival reactions and probability calculations. Include any completed espionage results.
     2. Provide a summary in 3-4 bullet points, each 4-6 words only, highlighting the major impacts with specific numbers, key changes to stats/territories, and immediate opportunities or threats.
-    3. Update the game state. The year should advance by a plausible amount (e.g., 1-10 years). All stats (population, military, economy, technology) must change based on the complex outcome. If a new territory is conquered, add it to the territories list. New territories must be plausible neighbors to existing ones. The world is composed of these regions: ${WORLD_REGIONS.join(', ')}.
-    4. Provide 3-4 new, distinct strategic choices for the player's next turn, reflecting the new, complex situation.
+    3. Update the game state: Advance year by 1-10 years, modify all stats based on calculated outcomes, update rival positions, process espionage missions, and reflect territorial changes.
+    4. Provide 3-4 new strategic choices, now including espionage options and considering rival threats/opportunities.
+    5. Update rival civilizations' actions and diplomatic relations based on the turn events.
 
-    Return the entire response as a single JSON object.`;
+    Return the entire response as a JSON object with the updated game state.`;
 
         const response = await retryApiCall(() => ai.models.generateContent({
             model: 'gemini-2.5-flash',

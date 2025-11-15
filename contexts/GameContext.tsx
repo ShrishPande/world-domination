@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { GameState, Choice, Difficulty, ScoreDetails } from '@/types';
+import { GameState, Choice, Difficulty, ScoreDetails, RivalCivilization, IntelligenceReport, EspionageMission, TerritoryInfo } from '@/types';
 
 interface GameContextType {
   gameState: GameState | null;
@@ -12,6 +12,14 @@ interface GameContextType {
   setEventDescription: (description: string) => void;
   eventSummary: string[];
   setEventSummary: (summary: string[]) => void;
+  rivalCivilizations: RivalCivilization[];
+  setRivalCivilizations: (rivals: RivalCivilization[]) => void;
+  intelligenceReports: IntelligenceReport[];
+  setIntelligenceReports: (reports: IntelligenceReport[]) => void;
+  activeMissions: EspionageMission[];
+  setActiveMissions: (missions: EspionageMission[]) => void;
+  worldTerritories: TerritoryInfo[];
+  setWorldTerritories: (territories: TerritoryInfo[]) => void;
   difficulty: Difficulty | null;
   setDifficulty: (difficulty: Difficulty | null) => void;
   scoreDetails: ScoreDetails | null;
@@ -25,6 +33,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [choices, setChoices] = useState<Choice[]>([]);
   const [eventDescription, setEventDescription] = useState<string>('');
   const [eventSummary, setEventSummary] = useState<string[]>([]);
+  const [rivalCivilizations, setRivalCivilizations] = useState<RivalCivilization[]>([]);
+  const [intelligenceReports, setIntelligenceReports] = useState<IntelligenceReport[]>([]);
+  const [activeMissions, setActiveMissions] = useState<EspionageMission[]>([]);
+  const [worldTerritories, setWorldTerritories] = useState<TerritoryInfo[]>([]);
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [scoreDetails, setScoreDetails] = useState<ScoreDetails | null>(null);
 
@@ -34,6 +46,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       choices, setChoices,
       eventDescription, setEventDescription,
       eventSummary, setEventSummary,
+      rivalCivilizations, setRivalCivilizations,
+      intelligenceReports, setIntelligenceReports,
+      activeMissions, setActiveMissions,
+      worldTerritories, setWorldTerritories,
       difficulty, setDifficulty,
       scoreDetails, setScoreDetails
     }}>

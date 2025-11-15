@@ -1,6 +1,6 @@
 import React from 'react';
-import { GameState, Choice, ChoiceType } from '../types';
-import { WORLD_REGIONS } from '../constants';
+import { GameState, Choice, ChoiceType, RivalCivilization } from '../types';
+import { WORLD_REGIONS, AI_PERSONALITIES } from '../constants';
 import Timer from './Timer';
 import Button from './ui/Button';
 import Card from './ui/Card';
@@ -16,6 +16,7 @@ interface GameScreenProps {
   choices: Choice[];
   description: string;
   summary: string[];
+  rivalCivilizations: RivalCivilization[];
   onSelectChoice: (choice: Choice) => void;
   onTimeUp: () => void;
   isLoading: boolean;
@@ -36,7 +37,7 @@ const getChoiceColor = (type: ChoiceType): string => {
     return 'bg-gray-500/80 hover:bg-gray-600/80 border-gray-400';
 }
 
-const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description, summary, onSelectChoice, onTimeUp, isLoading, error }) => {
+const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description, summary, rivalCivilizations, onSelectChoice, onTimeUp, isLoading, error }) => {
 
   const territoriesConquered = gameState.territories.length;
   const worldPercentage = ((territoriesConquered / WORLD_REGIONS.length) * 100).toFixed(1);
@@ -78,9 +79,45 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, choices, description
                 </div>
                 <p className="text-center text-gray-300">{territoriesConquered} of {WORLD_REGIONS.length} Regions ({worldPercentage}%)</p>
             </div>
-             <div className="relative p-2 bg-gray-900/50 rounded-md overflow-hidden border border-gray-700">
+              <div className="relative p-2 bg-gray-900/50 rounded-md overflow-hidden border border-gray-700">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800/20 via-transparent to-cyan-900/20 animate-subtle-pan"></div>
               <WorldMap controlledTerritories={gameState.territories} />
+            </div>
+        </Card>
+        <Card>
+            <h3 className="text-xl font-orbitron text-white mb-4">Rival Civilizations</h3>
+            <div className="space-y-3">
+                {rivalCivilizations.map((rival) => (
+                    <div key={rival.name} className="bg-gray-900/50 p-3 rounded-md border border-gray-700">
+                        <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-cyan-300">{rival.name}</h4>
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                rival.diplomacyStatus === 'allied' ? 'bg-green-900/50 text-green-300' :
+                                rival.diplomacyStatus === 'friendly' ? 'bg-blue-900/50 text-blue-300' :
+                                rival.diplomacyStatus === 'neutral' ? 'bg-gray-900/50 text-gray-300' :
+                                'bg-red-900/50 text-red-300'
+                            }`}>
+                                {rival.diplomacyStatus.toUpperCase()}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-400 mb-2">{AI_PERSONALITIES[rival.personality]?.description || 'Unknown personality'}</p>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="text-center">
+                                <div className="font-bold text-red-400">{rival.military}</div>
+                                <div className="text-gray-500">Military</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="font-bold text-green-400">{rival.economy}</div>
+                                <div className="text-gray-500">Economy</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="font-bold text-purple-400">{rival.technology}</div>
+                                <div className="text-gray-500">Tech</div>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Last activity: {rival.lastKnownActivity}</p>
+                    </div>
+                ))}
             </div>
         </Card>
       </div>

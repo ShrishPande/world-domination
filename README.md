@@ -35,6 +35,19 @@ Unlike traditional strategy games, World Domination uses advanced AI to generate
 - **Hard**: Ruthless world where mistakes are costly
 - **Realistic**: Complex, historically plausible scenarios
 
+## 🔐 Account System
+
+### Secure Authentication
+- **Password Protection**: All accounts are secured with bcrypt-hashed passwords
+- **JWT Tokens**: Session management with secure JSON Web Tokens (7-day expiration)
+- **Username Uniqueness**: Each ruler name must be unique across the empire
+
+### Getting Started
+1. **Create Account**: Choose a unique ruler name and strong password
+2. **Secure Login**: Access your account anytime with username/password
+3. **Persistent Sessions**: Stay logged in across browser sessions
+4. **Account Recovery**: Contact support if you forget your credentials
+
 ## 🚀 How to Play
 
 ### 1. **Choose Your Era**
@@ -132,9 +145,10 @@ World Domination challenges you to think like a real historical leader. Every ch
 - **Competitive**: Challenge yourself and others on global leaderboards
 - **Accessible**: No complex rules - just strategic thinking and bold choices
 - **Rewarding**: Experience the thrill of building and maintaining an empire
+- **Secure**: Your progress and personal data are protected
 
 ---
 
 **Ready to conquer the world? Your empire awaits!** 👑
 
-*Built with cutting-edge AI technology for unparalleled strategic depth.*
+*Built with cutting-edge AI technology and enterprise-grade security.*

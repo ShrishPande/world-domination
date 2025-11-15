@@ -6,13 +6,17 @@ import { useGame } from '@/contexts/GameContext';
 
 export default function GameOverPage() {
   const router = useRouter();
-  const { scoreDetails, gameState, setGameState, setChoices, setEventDescription, setEventSummary, setDifficulty, setScoreDetails } = useGame();
+  const { scoreDetails, gameState, setGameState, setChoices, setEventDescription, setEventSummary, setRivalCivilizations, setIntelligenceReports, setActiveMissions, setWorldTerritories, setDifficulty, setScoreDetails } = useGame();
 
   const handlePlayAgain = () => {
     setGameState(null);
     setChoices([]);
     setEventDescription('');
     setEventSummary([]);
+    setRivalCivilizations([]);
+    setIntelligenceReports([]);
+    setActiveMissions([]);
+    setWorldTerritories([]);
     setDifficulty(null);
     setScoreDetails(null);
     router.push('/setup');
@@ -23,6 +27,10 @@ export default function GameOverPage() {
     setChoices([]);
     setEventDescription('');
     setEventSummary([]);
+    setRivalCivilizations([]);
+    setIntelligenceReports([]);
+    setActiveMissions([]);
+    setWorldTerritories([]);
     setDifficulty(null);
     setScoreDetails(null);
     router.push('/dashboard');

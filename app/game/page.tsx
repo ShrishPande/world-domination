@@ -18,6 +18,10 @@ export default function GamePage() {
     choices, setChoices,
     eventDescription, setEventDescription,
     eventSummary, setEventSummary,
+    rivalCivilizations, setRivalCivilizations,
+    intelligenceReports, setIntelligenceReports,
+    activeMissions, setActiveMissions,
+    worldTerritories, setWorldTerritories,
     difficulty,
     setScoreDetails
   } = useGame();
@@ -33,6 +37,10 @@ export default function GamePage() {
       setChoices(nextState.choices);
       setEventDescription(nextState.description);
       setEventSummary(nextState.summary);
+      setRivalCivilizations(nextState.gameState.rivalCivilizations);
+      setIntelligenceReports(nextState.gameState.intelligenceReports);
+      setActiveMissions(nextState.gameState.activeMissions);
+      setWorldTerritories(nextState.gameState.worldTerritories);
     } catch (e) {
       setError('An unexpected event occurred! Your strategists are confused. Please make another choice.');
       console.error(e);
@@ -74,6 +82,7 @@ export default function GamePage() {
       choices={choices}
       description={eventDescription}
       summary={eventSummary}
+      rivalCivilizations={rivalCivilizations}
       onSelectChoice={handleSelectChoice}
       onTimeUp={handleTimeUp}
       isLoading={isLoading}

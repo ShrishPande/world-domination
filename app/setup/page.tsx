@@ -11,7 +11,7 @@ export default function SetupPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { setGameState, setChoices, setEventDescription, setEventSummary, setDifficulty } = useGame();
+  const { setGameState, setChoices, setEventDescription, setEventSummary, setRivalCivilizations, setIntelligenceReports, setActiveMissions, setWorldTerritories, setDifficulty } = useGame();
 
   const handleStartGame = useCallback(async (country: string, year: number, difficulty: Difficulty) => {
     setIsLoading(true);
@@ -23,6 +23,10 @@ export default function SetupPage() {
       setChoices(initialState.choices);
       setEventDescription(initialState.description);
       setEventSummary(initialState.summary);
+      setRivalCivilizations(initialState.gameState.rivalCivilizations);
+      setIntelligenceReports(initialState.gameState.intelligenceReports);
+      setActiveMissions(initialState.gameState.activeMissions);
+      setWorldTerritories(initialState.gameState.worldTerritories);
       router.push('/game');
     } catch (e) {
       setError('Failed to start the game. The AI strategist might be on a coffee break. Please try again.');

@@ -24,20 +24,20 @@ const handleResponse = async (response: Response) => {
     return transformId(data);
 };
 
-export const loginUser = async (username: string): Promise<User> => {
+export const loginUser = async (username: string, password: string): Promise<{ user: User; token: string }> => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, password }),
     });
     return handleResponse(response);
 };
 
-export const signupUser = async (username: string): Promise<User> => {
+export const signupUser = async (username: string, password: string): Promise<{ user: User; token: string }> => {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, password }),
     });
     return handleResponse(response);
 };
