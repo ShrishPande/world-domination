@@ -1,7 +1,0 @@
-{
-  "/api/scores/user/[userId]/route": "app/api/scores/user/[userId]/route.js",
-  "/setup/page": "app/setup/page.js",
-  "/auth/page": "app/auth/page.js",
-  "/api/auth/signup/route": "app/api/auth/signup/route.js",
-  "/page": "app/page.js"
-}
